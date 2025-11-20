@@ -54,14 +54,5 @@ npm run build
 npm run preview
 ```
 
-## Minimal API contract (example)
-
-- POST /api/chat
-  - Body: { "messages":[{"role":"user","content":"Hello"}], "model":"deepseek-1b" }
-  - Response: { "id":"...", "choices":[{"message":{"role":"assistant","content":"..."}}] }
-
-## Notes & troubleshooting
-
-- OOM on CPU: use a quantized model or reduce context length.
-- Slow responses: enable FP16 on GPU or use optimized runtime/batching.
-- Secure local endpoints before exposing to networks.
+# upload more than 50MB or large file in github
+https://medium.com/linkit-intecs/how-to-upload-large-files-to-github-repository-2b1e03723d2
