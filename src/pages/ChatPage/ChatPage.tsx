@@ -1,75 +1,87 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Helmet } from "react-helmet";
-import { Link, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import ChatListSideBar from '../../components/ChatListSideBar/ChatListSideBar';
-import Textarea from '../../components/UI/Textarea/Textarea';
-import Button from '../../components/UI/Button/Button';
+import type { ChatRecordType } from '../../global';
+import ChatForm from '../../components/Forms/ChatForm/ChatForm';
+import { useIndexDb } from '../../hooks/useIndexDB';
+import { SITE_NAME } from '../../constants';
 
-function ChatForm() {
-    const [text, setText] = useState("");
-    const [loading, setLoading] = useState(false);
+function ChatPage() {
+    const { chatId } = useParams();
+    const navigate = useNavigate();
+    const {
+        addRecord,
+        getChatRecord,
+        getAllRecord,
+        deleteRecord,
+        isDBReady
+    } = useIndexDb("ChatDB", "Chats");
+    const [chatList, setChatList] = useState<ChatRecordType[]>([]);
+    const [pageTitle, setPageTitle] = useState(`Chat Page | ${SITE_NAME}`);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!text.trim()) return;
-        setLoading(true);
-        try {
-            // await fetch("/api/chat", {
-            //     method: "POST",
-            //     headers: { "Content-Type": "application/json" },
-            //     body: JSON.stringify({
-            //         messages: [{ role: "user", content: text }],
-            //         model: "deepseek-1b",
-            //     })
-            // });
-            setText("");
-        } catch (err) {
-            console.error("Submit error:", err);
-        } finally {
-            setLoading(false);
+    useEffect(() => {
+        if (!isDBReady) return;
+        let mounted = true;
+        getAllRecord()
+            .then(data => { if (mounted) setChatList(data); })
+            .catch(console.error);
+        return () => { mounted = false; };
+    }, [isDBReady, getAllRecord]);
+
+    useEffect(() => {
+        if (!chatId) return;
+
+        getChatRecord(chatId)
+            .then((record) => {
+                if (record) {
+                    console.log("Loaded chat record:", record);
+                    setPageTitle(`${record.chatTitle} | ${SITE_NAME}`);
+                } else {
+                    navigate('/chat', { replace: true });
+                    console.log("No chat record found for ID:", chatId);
+                };
+            })
+            .catch(e => console.error("Error fetching chat record:", e));
+    }, [chatId]);
+
+    const handleOnAddChat = async () => {
+        await addRecord({ name: "Sanjay", role: "Developer" });
+        const updated = await getAllRecord();
+        setChatList(updated);
+    };
+
+    const handleOnDeleteChat = async (id: number) => {
+        await deleteRecord(id);
+        const updated = await getAllRecord();
+        setChatList(updated);
+        // if the deleted chat is currently open, navigate away
+        if( chatId == String(id) ){
+            navigate('/chat', { replace: true });
         }
     };
 
     return (
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <label htmlFor="prompt">Message</label>
-            <Textarea
-                id="prompt"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                rows={6}
-                style={{ resize: "vertical", padding: 8 }}
-                placeholder="Type your message..."
-            />
-            <Button type="submit" disabled={loading || !text.trim()}>
-                {loading ? "Sending..." : "Send"}
-            </Button>
-        </form>
-    );
-}
-
-function ChatPage() {
-  const { chatId } = useParams();
-
-  console.log("Chat ID:", chatId);
-  return (
-    <>
-        <Helmet>
-            <title>Chat Page</title>
-            <meta name="description" content="Chat with our AI model." />
-        </Helmet>
-        <main>
-            <Link to="/chat">
-                <button aria-label='New Chat'>+</button>
-            </Link>
-            <ChatListSideBar />
-            <div className='conversation'>
-                <ChatForm />
-            </div>
-        </main>
-    </>
-  )
+        <>
+            <Helmet>
+                <title>{pageTitle}</title>
+                <meta name="description" content="Chat with our AI model." />
+            </Helmet>
+            <main>
+                <ChatListSideBar
+                    chatList={chatList}
+                    handleOnAddChat={handleOnAddChat}
+                    handleOnDeleteChat={handleOnDeleteChat}
+                />
+                <div className='conversation'>
+                    <div className='chat-form'>
+                        <ChatForm />
+                    </div>
+                </div>
+            </main>
+        </>
+    )
 }
 
 export default ChatPage
