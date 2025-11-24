@@ -91,8 +91,8 @@ function ChatPage() {
         }];
         await updateRecord(chatId, updatedConvo);
         const updatedRecords = await getAllRecord();
-        console.log("Updated chat list:", updatedRecords);
         setChatList(updatedRecords);
+        setChatConvo(prevConvo => [...prevConvo, ...updatedConvo]);
     }
 
     const handleOnDeleteChat = async (id: string) => {
