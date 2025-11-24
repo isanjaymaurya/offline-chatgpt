@@ -1,0 +1,64 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: var(--btn-bg, #0f172a);
+  color: var(--btn-fg, #fff);
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.08s ease;
+  user-select: none;
+}
+
+.button:hover:not(:disabled) {
+  filter: brightness(0.98);
+  transform: translateY(-1px);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* spinner */
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+}
+
+.spinner svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  stroke: currentColor;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* rotate the path for spinner animation */
+.spinner svg path,
+.spinner svg circle {
+  transform-origin: 50% 50%;
+}
+.spinner svg path {
+  animation: spin 1s linear infinite;
+}

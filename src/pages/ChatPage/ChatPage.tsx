@@ -76,13 +76,12 @@ function ChatPage() {
                 sidebar={
                     <ChatListSideBar
                         chats={chatList}
-                        onAdd={handleOnAddChat}
                         onDelete={handleOnDeleteChat}
                     />
                 }
             >
                 <div>
-                    <ChatForm />
+                    <ChatForm onAdd={handleOnAddChat} />
                 </div>
             </BaseLayout>
         </>

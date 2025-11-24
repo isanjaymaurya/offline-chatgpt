@@ -1,24 +1,25 @@
 import { Link } from "react-router";
 import type { ChatRecordType } from "../../global";
+import IconButton from "../UI/IconButton/IconButton";
 
 interface ChatListSideBarProps {
     chats: ChatRecordType[];
-    onAdd: () => void;
     onDelete: (id: number) => void;
 }
 
 const ChatListSideBar = (
-    { chats, onAdd, onDelete }: ChatListSideBarProps
+    { chats, onDelete }: ChatListSideBarProps
 ) => {
     return (
         <aside className="chat-list-sidebar">
             <div>
-                <button
-                    aria-label='New Chat'
-                    onClick={onAdd}
-                >
-                    +
-                </button>
+                <Link to="/chat">
+                    <IconButton
+                        aria-label='New Chat'
+                    >
+                        +
+                    </IconButton>
+                </Link>
             </div>
             <ul className="chat-sidebar">
                 {chats.map((chat) => (
@@ -27,12 +28,12 @@ const ChatListSideBar = (
                             <Link to={`/chat/${chat.id}`}>
                                 {chat.chatTitle}
                             </Link>
-                            <button
+                            <IconButton
                                 aria-label={`Delete chat ${chat.id}`}
                                 onClick={() => chat.id !== undefined && onDelete(chat.id)}
                             >
                                 Delete
-                            </button>
+                            </IconButton>
                         </div>
                     </li>
                 ))}
