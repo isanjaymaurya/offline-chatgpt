@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useMemo, useState } from "react";
-import type { ChatRecordType } from "../global";
 import { v4 as uuidv4 } from "uuid";
+import type { ChatConvoType, ChatRecordType, NewChatRecordType } from "../global";
 
 export function useIndexDb(dbName: string, storeName: string) {
     const dbRef = useRef<IDBDatabase | null>(null);
@@ -69,21 +69,20 @@ export function useIndexDb(dbName: string, storeName: string) {
         });
     }, []);
 
-    const addRecord = useCallback((data: ChatRecordType): Promise<string | number> => {
+    const addRecord = useCallback((data: NewChatRecordType): Promise<string> => {
         return new Promise(async (resolve, reject) => {
             try {
                 const database = dbRef.current ?? (await waitForDb());
                 const tx = database.transaction(storeName, "readwrite");
                 const store = tx.objectStore(storeName);
                 const id = (crypto as any)?.randomUUID ? (crypto as any).randomUUID() : uuidv4();
-                const chatdata = { ...data, chatTitle: `chat_${id}` };
-                const record = { ...chatdata, id };
+                const record = { ...data, id };
                 // use put to allow upsert (safer than add)
                 const request = store.put(record as any);
 
                 request.onsuccess = (e) => {
                     // return the key (could be string or number)
-                    resolve((e.target as IDBRequest).result as string | number);
+                    resolve((e.target as IDBRequest).result as string);
                 };
                 request.onerror = (e) => {
                     reject((e.target as IDBRequest).error ?? new Error("Add record failed"));
@@ -97,7 +96,54 @@ export function useIndexDb(dbName: string, storeName: string) {
         });
     }, [storeName, waitForDb]);
 
-    const getChatRecord = useCallback((chatId: string | number): Promise<ChatRecordType | undefined> => {
+    const updateRecord = useCallback(
+        (id: string, newConvo: ChatConvoType[]): Promise<ChatConvoType[]> => {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const database = dbRef.current ?? (await waitForDb());
+                    const tx = database.transaction(storeName, "readwrite");
+                    const store = tx.objectStore(storeName);
+
+                    let updatedConvo: ChatConvoType[] = [];
+
+                    const toAppend = Array.isArray(newConvo) ? newConvo : [newConvo];
+
+                    const getRequest = store.get(id as IDBValidKey);
+                    getRequest.onsuccess = () => {
+                        const record: ChatRecordType | undefined = getRequest.result;
+                        if (!record) {
+                            return reject(new Error("Record not found for update"));
+                        }
+
+                        const oldConvo: ChatConvoType[] = Array.isArray(record.convo) ? record.convo : [];
+                        updatedConvo = [...oldConvo, ...toAppend];
+
+                        const newRecord: ChatRecordType = {
+                            ...record,
+                            convo: updatedConvo,
+                            updatedAt: Date.now(),
+                        };
+                        console.log("Updating record:", newRecord);
+                        const putRequest = store.put(newRecord);
+                        putRequest.onerror = (e) =>
+                            reject((e.target as IDBRequest).error ?? new Error("Update record failed"));
+                    };
+
+                    getRequest.onerror = (e) =>
+                        reject((e.target as IDBRequest).error ?? new Error("Get record for update failed"));
+
+                    tx.oncomplete = () => resolve(updatedConvo);
+                    tx.onabort = tx.onerror = (e: any) =>
+                        reject(e?.target?.error ?? new Error("Transaction failed during update"));
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        },
+        [storeName, waitForDb]
+    );
+
+    const getChatRecord = useCallback((chatId: string): Promise<ChatRecordType | undefined> => {
         return new Promise(async (resolve, reject) => {
             try {
                 const database = dbRef.current ?? (await waitForDb());
@@ -105,7 +151,7 @@ export function useIndexDb(dbName: string, storeName: string) {
                 const store = tx.objectStore(storeName);
 
                 // try exact key first
-                const tryGet = (key: string | number) => {
+                const tryGet = (key: string) => {
                     return new Promise<ChatRecordType | undefined>((res, rej) => {
                         const request = store.get(key as IDBValidKey);
                         request.onsuccess = () => res(request.result as ChatRecordType | undefined);
@@ -116,7 +162,7 @@ export function useIndexDb(dbName: string, storeName: string) {
                 let result = await tryGet(chatId as any);
                 // if not found and chatId is string that looks like number, try numeric key
                 if (result === undefined && typeof chatId === "string" && /^\d+$/.test(chatId)) {
-                    result = await tryGet(Number(chatId));
+                    result = await tryGet(chatId);
                 }
                 resolve(result);
             } catch (err) {
@@ -141,7 +187,7 @@ export function useIndexDb(dbName: string, storeName: string) {
         });
     }, [storeName, waitForDb]);
 
-    const deleteRecord = useCallback((id: string | number): Promise<void> => {
+    const deleteRecord = useCallback((id: string): Promise<void> => {
         return new Promise(async (resolve, reject) => {
             try {
                 const database = dbRef.current ?? (await waitForDb());
@@ -159,6 +205,7 @@ export function useIndexDb(dbName: string, storeName: string) {
 
     return useMemo(() => ({
         addRecord,
+        updateRecord,
         getChatRecord,
         getAllRecord,
         deleteRecord,

@@ -6,7 +6,7 @@ import Button from "../UI/Button/Button";
 
 interface ChatListSideBarProps {
     chats: ChatRecordType[];
-    onDelete: (id: number) => void;
+    onDelete: (id: string) => void;
 }
 
 const ChatListSideBar = (
@@ -25,7 +25,7 @@ const ChatListSideBar = (
                 </Link>
             </div>
             <ul className="chat-sidebar">
-                {chats.map((chat) => (
+                {chats.sort((a, b) =>  b.updatedAt - a.updatedAt).map((chat: ChatRecordType) => (
                     <li key={chat.id}>
                         <div>
                             <Link to={`/chat/${chat.id}`}>

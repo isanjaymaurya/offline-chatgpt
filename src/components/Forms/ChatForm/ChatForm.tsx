@@ -7,16 +7,14 @@ export type ChatFormProps = {
     setUserQuery: (text: string) => void;
     placeholder?: string;
     disabled?: boolean;
-    onSubmit?: (text: string) => void | Promise<void>;
-    onAdd?: () => void | Promise<void>;
+    onSubmit?: (text: string) => void;
 };
 
 const ChatForm: React.FC<ChatFormProps> = ({
     userQuery,
     setUserQuery,
     disabled = false,
-    onSubmit,
-    onAdd
+    onSubmit
 }) => {
   const [loading, setLoading] = useState(false);
 
@@ -25,16 +23,9 @@ const ChatForm: React.FC<ChatFormProps> = ({
     if (!userQuery.trim() || disabled) return;
     setLoading(true);
     try {
-      if (onSubmit) {
-        await onSubmit(userQuery);
-      } else {
-      }
-
       setUserQuery("");
 
-      if (onAdd) {
-        await onAdd();
-      }
+      await onSubmit(userQuery);
     } catch (err) {
       console.error("Submit error:", err);
     } finally {
