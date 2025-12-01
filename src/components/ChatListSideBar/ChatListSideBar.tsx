@@ -1,8 +1,11 @@
-import { Link } from "react-router";
+import { Link, useParams } from "react-router";
 import type { ChatRecordType } from "../../global";
 import IconButton from "../UI/IconButton/IconButton";
 import DocumentAddIcon from "../Icons/DocumentAddIcon";
 import Button from "../UI/Button/Button";
+import './ChatListSideBar.Module.scss';
+import EllipsisHorizontalIcon from "../Icons/EllipsisHorizontalIcon";
+import { useState } from "react";
 
 interface ChatListSideBarProps {
     chats: ChatRecordType[];
@@ -13,9 +16,12 @@ interface ChatListSideBarProps {
 const ChatListSideBar = (
     { chats, onDelete, onNewChat }: ChatListSideBarProps
 ) => {
+    const { chatId: activeChatId } = useParams();
+    const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+
     return (
-        <aside className="chat-list-sidebar">
-            <div style={{ display: 'flex', justifyContent: 'end'}}>
+        <aside className="chat-sidebar">
+            <div className="new-chat">
                 <Link to="/chat">
                     <Button
                         aria-label='New Chat'
@@ -26,20 +32,30 @@ const ChatListSideBar = (
                     </Button>
                 </Link>
             </div>
-            <ul className="chat-sidebar">
+            <ul className="chat-list">
                 {chats.sort((a, b) =>  b.updatedAt - a.updatedAt).map((chat: ChatRecordType) => (
-                    <li key={chat.id}>
-                        <div>
-                            <Link to={`/chat/${chat.id}`}>
-                                {chat.chatTitle}
-                            </Link>
-                            <IconButton
-                                aria-label={`Delete chat ${chat.id}`}
-                                onClick={() => chat.id !== undefined && onDelete(chat.id)}
-                            >
-                                Delete
-                            </IconButton>
-                        </div>
+                    <li
+                        key={chat.id}
+                        className={`chat-convo ${chat.id === activeChatId ? 'active' : ''}`}
+                    >
+                        <Link to={`/chat/${chat.id}`} className="convo-title">
+                            {chat.chatTitle}
+                        </Link>
+                        <IconButton
+                            onClick={() => setMenuOpenId(chat.id)}
+                        >
+                            <EllipsisHorizontalIcon className="chat-action-icon" height={26} width={26} />
+                        </IconButton>
+                        {menuOpenId === chat.id && (
+                            <div className="chat-menu">
+                                <button>Rename</button>
+                                <button onClick={() => onDelete(chat.id)}>Delete</button>
+                            </div>
+                        )}
+
+                        {/* 
+                            Delete
+                            </IconButton> */}
                     </li>
                 ))}
             </ul>

@@ -41,14 +41,14 @@ const ChatForm: React.FC<ChatFormProps> = ({
         onChange={(e) => setUserQuery(e.target.value)}
         rows={6}
         style={{ resize: "vertical", padding: 8 }}
-        placeholder={"Type your query..."}
+        placeholder={"Ask me anything..."}
       />
       <Button
         type="submit"
         disabled={loading || !userQuery.trim() || disabled}
         loading={loading}
       >
-        {loading ? "Sending..." : "Send Message"}
+        {loading ? "Sending..." : "send"}
       </Button>
     </form>
   );

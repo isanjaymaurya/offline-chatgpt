@@ -1,4 +1,4 @@
-import { useTheme } from "../../../hooks/useTheme";
+import { useThemeContext } from "../../../context/ThemeProvider";
 import IconButton from "../../UI/IconButton/IconButton";
 import SunIcon from "../../Icons/SunIcon";
 import MoonIcon from "../../Icons/MoonIcon";
@@ -6,7 +6,7 @@ import GithubIcon from "../../Icons/GithubIcon";
 import styles from "./Navbar.module.scss";
 
 export default function Navbar() {
-  const { isDark, toggle } = useTheme();
+  const { isDark, toggle } = useThemeContext();
 
   return (
     <header className={styles.header}>

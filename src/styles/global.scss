@@ -1,14 +1,13 @@
-@use "styles/variables" as vars;
 
 body {
   margin: 0;
   padding: 0;
-  font-family: vars.$font-stack;
+  font-family: Roboto, "Helvetica Neue", Arial sans-serif;
 }
 
 :root {
   color: #f1f1f1;
-  background-color: #333;
+  background-color: #fff;
 
   // chip variables
   --chip-bg: #f3f4f6;

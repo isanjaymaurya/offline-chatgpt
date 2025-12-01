@@ -9,61 +9,38 @@ export function useTheme() {
   const applyTheme = useCallback((t: Theme) => {
     if (typeof window === "undefined") return;
     const root = document.documentElement;
-    if (t === "system") {
-      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      root.classList.toggle("dark", prefersDark);
-    } else {
-      root.classList.toggle("dark", t === "dark");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    root.classList.remove("dark");
+    if (t === "dark" || (t === "system" && prefersDark)) {
+      root.classList.add("dark");
     }
   }, []);
 
   useEffect(() => {
     applyTheme(theme);
-
     if (typeof window === "undefined") return;
-    const mq = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = (e: MediaQueryListEvent) => {
-      // only react when using system theme
+
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = () => {
       if (theme === "system") applyTheme("system");
     };
-    try {
-      mq?.addEventListener?.("change", handler);
-    } catch {
-      // fallback for older browsers
-      try {
-        // @ts-ignore
-        mq?.addListener?.(handler);
-      } catch {}
-    }
-    return () => {
-      try {
-        mq?.removeEventListener?.("change", handler);
-      } catch {
-        try {
-          // @ts-ignore
-          mq?.removeListener?.(handler);
-        } catch {}
-      }
-    };
+
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
   }, [theme, applyTheme]);
 
   const setTheme = useCallback((t: Theme) => setThemeStorage(t), [setThemeStorage]);
-
   const toggle = useCallback(() => {
-    setThemeStorage((prev) => (prev === "dark" ? "light" : "dark"));
+    setThemeStorage(prev => (prev === "dark" ? "light" : "dark"));
   }, [setThemeStorage]);
 
   const isDark = useMemo(() => {
     if (typeof window === "undefined") return theme === "dark";
     if (theme === "dark") return true;
     if (theme === "light") return false;
-    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
   }, [theme]);
 
-  return {
-    theme,
-    setTheme,
-    toggle,
-    isDark,
-  } as const;
+  return { theme, setTheme, toggle, isDark } as const;
 }

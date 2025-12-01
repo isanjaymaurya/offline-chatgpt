@@ -1,0 +1,25 @@
+$themes: (
+    dark: (
+        primary-color: #6c757d,
+        text-color: #eee,
+        background-color: #222,
+    ),
+    light: (
+        primary-color: #007bff,
+        text-color: #333,
+        background-color: #fff, 
+    )
+);
+
+
+[theme='light'] {
+    @each $key, $value in map-get($themes, light) {
+        #{$key}: #{$value};
+    }
+}
+
+[theme='dark'] {
+    @each $key, $value in map-get($themes, dark) {
+        #{$key}: #{$value};
+    }
+}
